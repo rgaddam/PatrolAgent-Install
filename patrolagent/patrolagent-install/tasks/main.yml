@@ -1,0 +1,37 @@
+---
+# tasks file for portalagent-install
+
+  - name: Stop PatrolAgent
+    service: name=PatrolAgent state=stopped
+    ignore_errors: yes
+
+  - name: Kill PatrolAgent
+    shell: ps -ef |grep -i patrol | grep -iv grep | awk '{print $2}' | xargs -i kill -9 {}
+
+  - name: remove files from BMC direcotry
+    file: path=/apps/bmc state=absent
+
+  - name: remove files from patrol directory
+    file: path=/etc/patrol.d state=absent
+
+  - name: Add svcbmc user 
+    user: name=svcbmc state=present home=/apps/bmc expires=1422403387
+
+  - name: Create BMC directory
+    file: path=/apps/bmc/ owner=svcbmc group=svcbmc mode=0755 state=directory
+  - name: Create Patrol directory
+    file: path=/etc/patrol.d owner=svcbmc group=svcbmc mode=0755 state=directory
+
+  - name: Install PortalAgent
+    shell: cd /nas/apps/Automation/Patrol/Linux/TrueSight/bmc_products; ./RunSilentInstall.sh
+
+  - name: Change Ownership BMC directory
+    file: path=/apps/bmc/ owner=svcbmc group=svcbmc mode=0775 recurse=yes
+  - name: Change owebership of Patrol directory
+    file: path=/etc/patrol.d/ owner=svcbmc group=svcbmc mode=0775 recurse=yes
+
+  - name: Run fix patrol account ldap script
+    shell: cd /nas/apps/Automation/Patrol; ./fix-patrol-account-ldap.sh
+
+  - name: Start PortalAgent
+    service: name=PatrolAgent state=restarted

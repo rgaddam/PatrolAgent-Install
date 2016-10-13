@@ -1,0 +1,6 @@
+---
+- hosts: patrol-test
+  gather_facts: true
+  roles:
+  - patrolagent-install
+
